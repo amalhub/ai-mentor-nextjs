@@ -23,15 +23,20 @@ interface QuestionProps {
 const FormSchema = z.object({
   option: z.string().min(1, "You need to answer something."),
   answer: z.string().optional(),
-  feedback: z.string().optional(),
+  questionId: z.string().optional(),
 });
 
 async function onSubmit(input: z.infer<typeof FormSchema>) {
   try {
-    const submitButton = document.getElementById(
-      "submit-button",
-    ) as HTMLButtonElement;
-    submitButton.disabled = true;
+    const data = {
+      questionId: input.questionId,
+      givenAnswer: input.option,
+    };
+    const response = await fetch("/api/attempts", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw Error("Status code: " + response.status);
 
     const statusLabel = document.getElementById("status") as HTMLLabelElement;
 
@@ -42,6 +47,11 @@ async function onSubmit(input: z.infer<typeof FormSchema>) {
       statusLabel.innerHTML = "Incorrect!";
       statusLabel.style.color = "red";
     }
+
+    const submitButton = document.getElementById(
+      "submit-button",
+    ) as HTMLButtonElement;
+    submitButton.disabled = true;
   } catch (error) {
     console.error(error);
     alert("Something went wrong. Please try again.");
@@ -61,7 +71,7 @@ export default function Quiz({ question }: QuestionProps) {
         <form
           onSubmit={form.handleSubmit((data) => {
             data.answer = question.correctAnswer;
-            data.feedback = question.feedback;
+            data.questionId = question.id;
 
             onSubmit(data);
           })}
@@ -75,6 +85,7 @@ export default function Quiz({ question }: QuestionProps) {
                 <FormLabel>{question.query}</FormLabel>
                 <FormControl>
                   <RadioGroup
+                    key={question.id}
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                     className="flex flex-col space-y-1"
@@ -82,14 +93,17 @@ export default function Quiz({ question }: QuestionProps) {
                     {answers.map((answer) => (
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value={answer} />
+                          <RadioGroupItem key={answer} value={answer} />
                         </FormControl>
                         <FormLabel className="font-normal">{answer}</FormLabel>
                       </FormItem>
                     ))}
                     <FormItem className="flex items-center space-x-3 space-y-0">
                       <FormControl>
-                        <RadioGroupItem value={question.correctAnswer} />
+                        <RadioGroupItem
+                          value={question.correctAnswer}
+                          key={question.correctAnswer}
+                        />
                       </FormControl>
                       <FormLabel className="font-normal">
                         {question.correctAnswer}

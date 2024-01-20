@@ -22,7 +22,7 @@ model Note {
 }
 
 model Question {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
   query         String
   wrongAnswers  String[]
   correctAnswer String
@@ -30,8 +30,20 @@ model Question {
   imageUrl      String
   keywords      String[]
   updatedUser   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  Attempt       Attempt[]
 
   @@map("questions")
+}
+
+model Attempt {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String
+  question    Question @relation(fields: [questionId], references: [id])
+  givenAnswer String
+  createdAt   DateTime @default(now())
+  questionId  String   @db.ObjectId
+
+  @@map("attempts")
 }
