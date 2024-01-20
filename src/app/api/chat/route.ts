@@ -10,35 +10,46 @@ export async function POST(req: Request) {
     const body = await req.json();
     const messages: ChatCompletionMessageParam[] = body.messages;
 
-    const messagesTruncated = messages.slice(-6);
-
-    const embedding = await getEmbedding(
-      messagesTruncated.map((message) => message.content).join("\n"),
-    );
+    const messagesTruncated = messages.slice(-1);
 
     const { userId } = auth();
 
-    const vectorQueryResponse = await notesIndex.query({
-      vector: embedding,
-      topK: 4,
-      filter: { userId },
+    if (!userId) {
+      return Response.json({ error: "No user found" }, { status: 500 });
+    }
+
+    const lastAttempt = await prisma.attempt.findFirst({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
     });
 
-    const relevantNotes = await prisma.note.findMany({
-      where: {
-        id: {
-          in: vectorQueryResponse.matches.map((match) => match.id),
-        },
-      },
+    if (!lastAttempt) {
+      return Response.json({ error: "No attempt found" }, { status: 500 });
+    }
+    const question = await prisma.question.findFirst({
+      where: { id: lastAttempt.questionId },
     });
+
+    if (!question) {
+      return Response.json({ error: "No question found" }, { status: 500 });
+    }
 
     const systemMessage: ChatCompletionMessageParam = {
       role: "system",
       content:
-        "You are an intelligent note taking app. You answer the user's question based on their existing notes. The relevant notes for this query are:\n\n" +
-        relevantNotes
-          .map((note) => `Title: ${note.title}\nContent:\n${note.content}`)
-          .join("\n\n"),
+        "You are an intelligent Maths teacher. Your response should be based on the question student had attempted and the feedback given. The relevant details:\n\n" +
+        "Question: " +
+        question.query +
+        "\n" +
+        "Student Given Answer: " +
+        lastAttempt.givenAnswer +
+        "\n" +
+        "Correct Answer: " +
+        question.correctAnswer +
+        "\n" +
+        "Feedback: " +
+        question.feedback +
+        "\n",
     };
 
     // console.log("Query: ", systemMessage.content, messagesTruncated);
