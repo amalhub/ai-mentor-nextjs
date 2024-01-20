@@ -20,3 +20,18 @@ model Note {
 
   @@map("notes")
 }
+
+model Question {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  query         String
+  wrongAnswers  String[]
+  correctAnswer String
+  feedback      String
+  imageUrl      String
+  keywords      String[]
+  updatedUser   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("questions")
+}

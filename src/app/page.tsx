@@ -24,7 +24,7 @@ export default function Home() {
         you to help!
       </p>
       <Button size="lg" asChild>
-        <Link href="/notes">Oepn</Link>
+        <Link href="/questions">Oepn</Link>
       </Button>
     </main>
   );
