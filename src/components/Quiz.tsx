@@ -90,20 +90,20 @@ export default function Quiz({ question }: QuestionProps) {
                     defaultValue={field.value}
                     className="flex flex-col space-y-1"
                   >
-                    {answers.map((answer) => (
-                      <FormItem className="flex items-center space-x-3 space-y-0">
+                    {answers.map((answer, index) => (
+                      <FormItem
+                        key={index}
+                        className="flex items-center space-x-3 space-y-0"
+                      >
                         <FormControl>
-                          <RadioGroupItem key={answer} value={answer} />
+                          <RadioGroupItem value={answer} />
                         </FormControl>
                         <FormLabel className="font-normal">{answer}</FormLabel>
                       </FormItem>
                     ))}
                     <FormItem className="flex items-center space-x-3 space-y-0">
                       <FormControl>
-                        <RadioGroupItem
-                          value={question.correctAnswer}
-                          key={question.correctAnswer}
-                        />
+                        <RadioGroupItem value={question.correctAnswer} />
                       </FormControl>
                       <FormLabel className="font-normal">
                         {question.correctAnswer}

@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 export default function Home() {
   const { userId } = auth();
 
-  if (userId) redirect("/notes");
+  if (userId) redirect("/quiz");
 
   return (
     <main className="flex h-screen flex-col items-center justify-center gap-5">
@@ -24,7 +24,7 @@ export default function Home() {
         you to help!
       </p>
       <Button size="lg" asChild>
-        <Link href="/questions">Oepn</Link>
+        <Link href="/quiz">Oepn</Link>
       </Button>
     </main>
   );
