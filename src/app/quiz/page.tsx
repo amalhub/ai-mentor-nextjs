@@ -13,7 +13,8 @@ export default async function NotePage() {
   if (!userId) throw Error("userId undefined");
 
   const questions = await prisma.question.findMany();
-  const question = questions[0];
+  const randomIndex = Math.floor(Math.random() * questions.length);
+  const question = questions[randomIndex];
 
   return <Quiz question={question} />;
 }

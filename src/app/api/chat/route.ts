@@ -1,21 +1,20 @@
-import { notesIndex } from "@/lib/db/pinecone";
-import openai, { getEmbedding } from "@/lib/openai";
-import { auth } from "@clerk/nextjs";
 import prisma from "@/lib/db/prisma";
-import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import openai from "@/lib/openai";
+import { auth } from "@clerk/nextjs";
 import { OpenAIStream, StreamingTextResponse } from "ai";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const messages: ChatCompletionMessageParam[] = body.messages;
 
-    const messagesTruncated = messages.slice(-1);
+    const messagesTruncated = messages.slice(-6);
 
     const { userId } = auth();
 
     if (!userId) {
-      return Response.json({ error: "No user found" }, { status: 500 });
+      return Response.json({ error: "No user found" }, { status: 401 });
     }
 
     const lastAttempt = await prisma.attempt.findFirst({
@@ -24,20 +23,20 @@ export async function POST(req: Request) {
     });
 
     if (!lastAttempt) {
-      return Response.json({ error: "No attempt found" }, { status: 500 });
+      return Response.json({ error: "No attempt found" }, { status: 404 });
     }
     const question = await prisma.question.findFirst({
       where: { id: lastAttempt.questionId },
     });
 
     if (!question) {
-      return Response.json({ error: "No question found" }, { status: 500 });
+      return Response.json({ error: "No question found" }, { status: 404 });
     }
 
     const systemMessage: ChatCompletionMessageParam = {
       role: "system",
       content:
-        "You are an intelligent Maths teacher. Your response should be based on the question student had attempted and the feedback given. The relevant details:\n\n" +
+        "You are an intelligent Maths teacher for 5th Grade students. Your response to the student should be based on the question student has attempted and the tips he was given beforehand. The relevant details:\n\n" +
         "Question: " +
         question.query +
         "\n" +
@@ -47,7 +46,7 @@ export async function POST(req: Request) {
         "Correct Answer: " +
         question.correctAnswer +
         "\n" +
-        "Feedback: " +
+        "Tips: " +
         question.feedback +
         "\n",
     };
